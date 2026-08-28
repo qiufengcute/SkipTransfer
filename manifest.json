@@ -1,0 +1,25 @@
+{
+    "manifest_version": 3,
+    "name": "Skip Transfer",
+    "version": "1.0.0",
+    "description": "跳过各种网页的中转页",
+    "permissions": [
+        "storage",
+        "sidePanel",
+        "tabs"
+    ],
+    "side_panel": {
+        "default_path": "sidebar.html"
+    },
+    "action": {
+        "default_title": "打开中转页设置页面",
+        "default_icon": "./imgs/icon.png"
+    },
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    }
+}

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中转页管理器 · 侧边栏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0d1117;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+
+        .sidebar {
+            width: 100%;
+            max-width: 380px;
+            background: #161b22;
+            border-radius: 24px;
+            padding: 20px 16px 18px;
+            border: 1px solid #30363d;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding: 0 4px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h2 i {
+            color: #58a6ff;
+            font-size: 18px;
+        }
+
+        .badge-count {
+            background: #1f2937;
+            color: #58a6ff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #30363d;
+        }
+
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 18px;
+            max-height: 560px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .card-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .card-list::-webkit-scrollbar-track {
+            background: #1c2128;
+            border-radius: 12px;
+        }
+        .card-list::-webkit-scrollbar-thumb {
+            background: #58a6ff;
+            border-radius: 12px;
+        }
+
+        .transfer-card {
+            background: #1c2128;
+            border-radius: 14px;
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .transfer-card:hover {
+            border-color: #58a6ff;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.08);
+        }
+
+        .card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: #f0f6fc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-name a {
+            color: inherit;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .card-actions button {
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #8b949e;
+            transition: 0.15s;
+            font-size: 13px;
+        }
+
+        .card-actions .del-btn {
+            color: #f85149;
+        }
+
+        .card-actions .del-btn:hover {
+            background: #f851491a;
+            color: #f85149;
+        }
+
+        .card-actions .settings-btn {
+            color: #58a6ff;
+        }
+
+        .card-actions .settings-btn:hover {
+            background: #1f2937;
+        }
+
+        .add-transfer-btn {
+            width: 100%;
+            padding: 12px 0;
+            background: #1f6feb;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(31, 111, 235, 0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-transfer-btn:hover {
+            background: #388bfd;
+            transform: scale(0.98);
+            box-shadow: 0 6px 20px rgba(31, 111, 235, 0.35);
+        }
+
+        .add-transfer-btn i {
+            font-size: 15px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-panel {
+            background: #1c2128;
+            max-width: 520px;
+            width: 92%;
+            border-radius: 28px;
+            padding: 26px 24px 22px;
+            border: 1px solid #30363d;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8);
+            transform: scale(0.94);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.active .modal-panel {
+            transform: scale(1);
+        }
+
+        .modal-panel h3 {
+            font-size: 19px;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 18px;
+            border-left: 4px solid #1f6feb;
+            padding-left: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-panel h3 i {
+            color: #58a6ff;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .field-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #b1bac4;
+            margin-bottom: 4px;
+        }
+
+        .field-group input,
+        .field-group textarea,
+        .field-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            font-size: 14px;
+            background: #0d1117;
+            transition: 0.15s;
+            outline: none;
+            color: #e6edf3;
+            font-family: inherit;
+        }
+
+        .field-group input:focus,
+        .field-group textarea:focus,
+        .field-group select:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.12);
+            background: #161b22;
+        }
+
+        .field-group select {
+            appearance: auto;
+            background: #0d1117;
+            cursor: pointer;
+        }
+
+        .field-group textarea {
+            min-height: 52px;
+            resize: vertical;
+            font-family: 'Menlo', 'Cascadia Code', monospace;
+            line-height: 1.5;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .field-row .field-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+        }
+
+        .field-row .field-group:last-child {
+            flex: 0 0 100px;
+        }
+
+        .field-row .field-group textarea,
+        .field-row .field-group input {
+            flex: 1;
+            min-height: 42px;
+        }
+
+        .input-multiline {
+            min-height: 90px !important;
+            resize: vertical;
+            font-family: 'Menlo', 'Cascadia Code', monospace;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 22px;
+            border-top: 1px solid #30363d;
+            padding-top: 18px;
+        }
+
+        .modal-actions button {
+            padding: 9px 26px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .modal-actions .modal-save {
+            background: #1f6feb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.25);
+        }
+
+        .modal-actions .modal-save:hover {
+            background: #388bfd;
+        }
+
+        .modal-actions .modal-cancel {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .modal-actions .modal-cancel:hover {
+            background: #30363d;
+        }
+
+        /* 详情弹窗 */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .detail-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .detail-panel {
+            background: #1c2128;
+            max-width: 480px;
+            width: 90%;
+            border-radius: 28px;
+            padding: 24px 22px 20px;
+            border: 1px solid #30363d;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8);
+            transform: scale(0.94);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .detail-overlay.active .detail-panel {
+            transform: scale(1);
+        }
+
+        .detail-panel h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 16px;
+            border-left: 4px solid #58a6ff;
+            padding-left: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-panel .field-group label {
+            color: #8b949e;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-panel .field-group input,
+        .detail-panel .field-group textarea {
+            width: 100%;
+            padding: 8px 14px;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 14px;
+            font-family: 'Menlo', 'Cascadia Code', monospace;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .detail-panel .field-group input:focus,
+        .detail-panel .field-group textarea:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.12);
+        }
+
+        .detail-panel .field-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .detail-panel .field-group .detail-disabled {
+            background: #0d1117;
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            font-family: 'Menlo', 'Cascadia Code', monospace;
+            font-size: 13px;
+            cursor: not-allowed;
+            opacity: 0.7;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .detail-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+            border-top: 1px solid #30363d;
+            padding-top: 16px;
+        }
+
+        .detail-actions button {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .detail-actions .detail-save {
+            background: #1f6feb;
+            color: white;
+        }
+
+        .detail-actions .detail-save:hover {
+            background: #388bfd;
+        }
+
+        .detail-actions .detail-close {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .detail-actions .detail-close:hover {
+            background: #30363d;
+        }
+
+        .io-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .io-buttons button {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            background: #1c2128;
+            color: #c9d1d9;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .io-buttons button:hover {
+            background: #21262d;
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                padding: 12px 10px;
+            }
+            .field-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .field-row .field-group:last-child {
+                flex: 1;
+            }
+            .modal-panel,
+            .detail-panel {
+                padding: 18px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="app">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-share-alt"></i> 中转页 <span style="font-weight:400; font-size:13px; color:#8b949e;">管理</span></h2>
+            <span class="badge-count" id="cardCount">0</span>
+        </div>
+
+        <div class="card-list" id="cardList">
+            <!-- 卡片由JS动态渲染 -->
+        </div>
+
+        <button class="add-transfer-btn" id="addTransferBtn">
+            <i class="fas fa-plus-circle"></i> 添加中转页
+        </button>
+    </div>
+
+    <!-- 新建弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-panel">
+            <h3><i class="fas fa-pen-fancy"></i> 新建中转规则</h3>
+
+            <div class="field-group">
+                <label><i class="fas fa-tag"></i> 名称</label>
+                <input type="text" id="modalName" placeholder="例如: 主站跳转" value="新中转">
+            </div>
+            <div class="field-group">
+                <label><i class="fas fa-globe"></i> 网站网址</label>
+                <input type="text" id="modalHomePage" placeholder="https://example.com/redirect" value="https://example.com/go">
+            </div>
+
+            <div class="field-group">
+                <label><i class="fas fa-code"></i> URL匹配正则</label>
+                <div class="field-row">
+                    <div class="field-group" style="flex:2">
+                        <input type="text" id="modalUrl" placeholder="/go/.*" value="/go/">
+                    </div>
+                    <div class="field-group" style="flex:1">
+                        <select id="modalUrlType">
+                            <option value="单个">单个</option>
+                            <option value="多个">多个</option>
+                            <option value="JS">JS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label><i class="fas fa-arrow-right"></i> 目标页面参数名</label>
+                <div class="field-row">
+                    <div class="field-group" style="flex:2">
+                        <input type="text" id="modalParam" placeholder="redirect" value="redirect">
+                    </div>
+                    <div class="field-group" style="flex:1">
+                        <select id="modalParamType">
+                            <option value="单个">单个</option>
+                            <option value="多个">多个</option>
+                            <option value="JS">JS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-cancel" id="modalCancelBtn">取消</button>
+                <button class="modal-save" id="modalSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="detail-overlay" id="detailOverlay">
+        <div class="detail-panel">
+            <h3><i class="fas fa-edit"></i> <span id="detailTitle">编辑中转规则</span></h3>
+            <div class="field-group">
+                <label>名称</label>
+                <input type="text" id="detailName" placeholder="名称">
+            </div>
+            <div class="field-group">
+                <label>网站网址</label>
+                <input type="text" id="detailHomePage" placeholder="https://example.com">
+            </div>
+            <div class="field-group">
+                <label>URL匹配正则</label>
+                <div id="detailUrlContainer">
+                    <input type="text" id="detailUrl" placeholder="/go/.*">
+                </div>
+                <select id="detailUrlType">
+                    <option value="单个">单个</option>
+                    <option value="多个">多个</option>
+                    <option value="JS">JS</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>目标页面参数名</label>
+                <div id="detailParamContainer">
+                    <input type="text" id="detailParam" placeholder="redirect">
+                </div>
+                <select id="detailParamType">
+                    <option value="单个">单个</option>
+                    <option value="多个">多个</option>
+                    <option value="JS">JS</option>
+                </select>
+            </div>
+            <div class="detail-actions">
+                <button class="detail-close" id="detailCloseBtn">取消</button>
+                <button class="detail-save" id="detailSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./sidebar.js"></script>
+
+</body>
+</html>
