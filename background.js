@@ -1,14 +1,14 @@
-import { getTransfers, setTransfers, getDefaultTransfers } from './tools.js';
-
-const DEFAULT_TRANSFERS = getDefaultTransfers();
+import { getTransfers } from './tools.js';
+import { parse } from './parseDSL.js';
 
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
+
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tab.url && tab.url !== 'about:blank') {
-        console.log('开始检测: ', tab.url);
+        console.log('[Service Worker] 开始检测: ', tab.url);
 
         const transfers = await getTransfers();
         const url = new URL(tab.url);
@@ -19,18 +19,19 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             let result = false;
 
             // 多个 URL
-            if (Array.isArray(t?.special?.url) && t?.special?.url.includes(fullUrl)) result = true;
-
-            // 字符串函数
-            if (t?.special?.url === 'js') {
-                const testFunc = function (url) {
-                    return eval(t.url);
+            if (Array.isArray(t.url)) {
+                for (const r of t.url) {
+                    if (fullUrl.match(`^${r}$`)) {
+                        result = true;
+                        break;
+                    }
                 }
-                if (testFunc(fullUrl)) result = true;
             }
 
-            // 标准 
-            if (fullUrl.match('^' + t.url)) result = true;
+            // 标准
+            if (fullUrl.match(`^${t.url}$`)) {
+                result = true;
+            }
 
             if (result) {
                 resultId = Number(i);
@@ -40,38 +41,40 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
         if (resultId !== -1) {
             const result = transfers[resultId];
-            console.log('检测到中转页, 匹配的项目为: ', result);
+            const urlParams = url.searchParams;
+            console.log('[Service Worker] 检测到中转页, 匹配的项目为: ', result);
             let gotoUrl = null;
 
             // 多个参数名
-            if (!gotoUrl && Array.isArray(result?.special?.url)) {
-                const urlParams = url.searchParams;
-                for (const p of t?.special?.param || []) {
-                    const result = urlParams.get(p);
-                    if (result) {
-                        gotoUrl = result;
-                        break;
+            if (!gotoUrl && Array.isArray(result.param)) {
+                for (const p of result.param || []) {
+                    try {
+                        const parseResult = await parse(p, fullUrl, tabId);
+                        const paramValue = (parseResult === undefined) ? (p === '' ? [...urlParams.keys()][0] : urlParams.get(p)) : parseResult;
+                        if (paramValue) {
+                            gotoUrl = paramValue;
+                            break;
+                        }
+                    } catch (e) {
+                        console.log('[Service Worker] DSL Command parse error: ', e)
                     }
                 }
             }
 
-            // 字符串函数
-            if (!gotoUrl && result?.special?.url === 'js') {
-                const testFunc = function (url) {
-                    const urlParams = new URL(url).searchParams;
-                    for (const p of t?.special?.param || []) {
-                        const result = urlParams.get(p);
-                        if (result) return result;
-                    }
-                    return null;
-                }
-                gotoUrl = testFunc(fullUrl);
-            } 
-
             // 标准
-            if (!gotoUrl) gotoUrl = url.searchParams.get(result['param']);
+            if (!gotoUrl) {
+                try {
+                    const parseResult = await parse(result.param, fullUrl, tabId);
+                    gotoUrl = (parseResult === undefined) ? (result.param === '' ? [...urlParams.keys()][0] : urlParams.get(result.param)) : parseResult;
+                } catch (e) {
+                    console.log('[Service Worker] DSL Command parse error: ', e)
+                }
+            }
 
-            if (gotoUrl) chrome.tabs.update(tabId, { url: gotoUrl });
+            if (gotoUrl) {
+                console.log('[Service Worker] 跳转到: ', gotoUrl);
+                chrome.tabs.update(tabId, { url: gotoUrl });
+            }
         }
     }
 });

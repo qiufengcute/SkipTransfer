@@ -77,12 +77,12 @@ function updateInputHeights() {
 
     // URL 输入框
     const urlParent = urlInput.parentNode;
-    const isUrlMulti = (urlType === '多个' || urlType === 'JS');
+    const isUrlMulti = urlType === '多个';
 
     if (isUrlMulti && urlInput.tagName !== 'TEXTAREA') {
         const newEl = document.createElement('textarea');
         newEl.id = 'modalUrl';
-        newEl.placeholder = urlType === 'JS' ? '// JavaScript 代码' : '每行一个正则';
+        newEl.placeholder = '每行一个正则';
         newEl.value = urlInput.value;
         newEl.className = 'input-multiline';
         urlParent.replaceChild(newEl, urlInput);
@@ -99,12 +99,12 @@ function updateInputHeights() {
 
     // 参数输入框
     const paramParent = paramInput.parentNode;
-    const isParamMulti = (paramType === '多个' || paramType === 'JS');
+    const isParamMulti = paramType === '多个';
 
     if (isParamMulti && paramInput.tagName !== 'TEXTAREA') {
         const newEl = document.createElement('textarea');
         newEl.id = 'modalParam';
-        newEl.placeholder = paramType === 'JS' ? '// JavaScript 代码' : '每行一个参数';
+        newEl.placeholder = '每行一个参数';
         newEl.value = paramInput.value;
         newEl.className = 'input-multiline';
         paramParent.replaceChild(newEl, paramInput);
@@ -126,12 +126,12 @@ function updateDetailInputHeights() {
 
     // URL 输入框
     const urlParent = detailUrlInput.parentNode;
-    const isUrlMulti = (urlType === '多个' || urlType === 'JS');
+    const isUrlMulti = urlType === '多个';
 
     if (isUrlMulti && detailUrlInput.tagName !== 'TEXTAREA') {
         const newEl = document.createElement('textarea');
         newEl.id = 'modalUrl';
-        newEl.placeholder = urlType === 'JS' ? '// JavaScript 代码' : '每行一个正则';
+        newEl.placeholder = '每行一个正则';
         newEl.value = detailUrlInput.value;
         newEl.className = 'input-multiline';
         urlParent.replaceChild(newEl, detailUrlInput);
@@ -148,12 +148,12 @@ function updateDetailInputHeights() {
 
     // 参数输入框
     const paramParent = detailParamInput.parentNode;
-    const isParamMulti = (paramType === '多个' || paramType === 'JS');
+    const isParamMulti = paramType === '多个';
 
     if (isParamMulti && detailParamInput.tagName !== 'TEXTAREA') {
         const newEl = document.createElement('textarea');
         newEl.id = 'modalParam';
-        newEl.placeholder = paramType === 'JS' ? '// JavaScript 代码' : '每行一个参数';
+        newEl.placeholder = '每行一个参数';
         newEl.value = detailParamInput.value;
         newEl.className = 'input-multiline';
         paramParent.replaceChild(newEl, detailParamInput);
@@ -180,9 +180,6 @@ window.showDetail = async (card) => {
     const name = transfer.name || '';
     const homePage = transfer.homePage || '';
     
-    const specialUrl = transfer?.special?.url;
-    const specialParam = transfer?.special?.param;
-    
     const url = transfer.url || '';
     const param = transfer.param || '';
 
@@ -191,20 +188,12 @@ window.showDetail = async (card) => {
     detailHomePage.value = homePage;
 
     // URL
-    if (Array.isArray(specialUrl)) {
+    if (Array.isArray(url)) {
         detailUrlTypeSelect.value = '多个';
         const textarea = document.createElement('textarea');
         textarea.id = 'detailUrl';
-        textarea.value = specialUrl.join('\n');
-        textarea.rows = Math.min(specialUrl.length + 1, 8);
-        detailUrlContainer.innerHTML = '';
-        detailUrlContainer.appendChild(textarea);
-    } else if (specialUrl === 'js') {
-        detailUrlTypeSelect.value = 'JS';
-        const textarea = document.createElement('textarea');
-        textarea.id = 'detailUrl';
-        textarea.value = url;
-        textarea.rows = Math.min(url.split('\n').length + 1, 8);
+        textarea.value = url.join('\n');
+        textarea.rows = Math.min(url.length + 1, 8);
         detailUrlContainer.innerHTML = '';
         detailUrlContainer.appendChild(textarea);
     } else {
@@ -213,20 +202,12 @@ window.showDetail = async (card) => {
     }
 
     // Param
-    if (Array.isArray(specialParam)) {
+    if (Array.isArray(param)) {
         detailParamTypeSelect.value = '多个';
         const textarea = document.createElement('textarea');
         textarea.id = 'detailUrl';
-        textarea.value = specialParam.join('\n');
-        textarea.rows = Math.min(specialParam.length + 1, 8);
-        detailParamContainer.innerHTML = '';
-        detailParamContainer.appendChild(textarea);
-    } else if (specialParam === 'js') {
-        detailParamTypeSelect.value = 'JS';
-        const textarea = document.createElement('textarea');
-        textarea.id = 'detailUrl';
-        textarea.value = param;
-        textarea.rows = Math.min(param.split('\n').length + 1, 8);
+        textarea.value = param.join('\n');
+        textarea.rows = Math.min(param.length + 1, 8);
         detailParamContainer.innerHTML = '';
         detailParamContainer.appendChild(textarea);
     } else {
@@ -259,23 +240,15 @@ async function saveDetail() {
         homePage: homePage
     };
 
-    item.special = item.special || {};
-
-    if (urlType === 'JS') {
-        item.url = url;
-        item.special.url = 'js';
-    } else if (urlType === '多个') {
-        item.special.url = url.split('\n').filter(s => s.trim());
+    if (urlType === '多个') {
+        item.url = url.split('\n').filter(s => s.trim());
     } else {
         item.url = url;
     }
     item.url.replace(/^https?:\/\//, '')
 
-    if (paramType === 'JS') {
-        item.url = param;
-        item.special.param = 'js'
-    } else if (paramType === '多个') {
-        item.special.param = param.split('\n').filter(s => s.trim());
+    if (paramType === '多个') {
+        item.param = param.split('\n').filter(s => s.trim());
     } else {
         item.param = param;
     }
@@ -382,23 +355,15 @@ saveBtn.addEventListener('click', async (e) => {
         homePage: homePage
     };
 
-    item.special = item.special || {};
-
-    if (urlType === 'JS') {
-        item.url = url;
-        item.special.url = 'js';
-    } else if (urlType === '多个') {
-        item.special.url = url.split('\n').filter(s => s.trim());
+    if (urlType === '多个') {
+        item.url = url.split('\n').filter(s => s.trim());
     } else {
         item.url = url;
     }
     item.url.replace(/^https?:\/\//, '')
 
-    if (paramType === 'JS') {
-        item.url = param;
-        item.special.param = 'js'
-    } else if (paramType === '多个') {
-        item.special.param = param.split('\n').filter(s => s.trim());
+    if (paramType === '多个') {
+        item.param = param.split('\n').filter(s => s.trim());
     } else {
         item.param = param;
     }
