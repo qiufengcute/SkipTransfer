@@ -122,7 +122,7 @@
             text-overflow: ellipsis;
         }
 
-        .card-name a {
+        .dsl-goto, .card-name a {
             color: inherit;
         }
 
@@ -578,7 +578,7 @@
             <div class="field-group">
                 <label><i class="fas fa-code"></i> URL匹配正则</label>
                 <div class="field-row">
-                    <div class="field-group" style="flex:2">
+                    <div id="modalUrlContainer" class="field-group" style="flex:2">
                         <input type="text" id="modalUrl" placeholder="/go/.*" value="/go/">
                     </div>
                     <div class="field-group" style="flex:1">
@@ -591,9 +591,9 @@
             </div>
 
             <div class="field-group">
-                <label><i class="fas fa-arrow-right"></i> 目标页面参数名</label>
+                <label><i class="fas fa-arrow-right"></i> 目标页面参数名 <a class="dsl-goto" href="https://github.com/qiufengcute/SkipTransfer/blob/main/DSL.md">DSL 文档</a></label>
                 <div class="field-row">
-                    <div class="field-group" style="flex:2">
+                    <div id="modalParamContainer" class="field-group" style="flex:2">
                         <input type="text" id="modalParam" placeholder="redirect" value="redirect">
                     </div>
                     <div class="field-group" style="flex:1">
@@ -617,15 +617,15 @@
         <div class="detail-panel">
             <h3><i class="fas fa-edit"></i> <span id="detailTitle">编辑中转规则</span></h3>
             <div class="field-group">
-                <label>名称</label>
+                <label><i class="fas fa-tag"></i> 名称</label>
                 <input type="text" id="detailName" placeholder="名称">
             </div>
             <div class="field-group">
-                <label>网站网址</label>
+                <label><i class="fas fa-globe"></i> 网站网址</label>
                 <input type="text" id="detailHomePage" placeholder="https://example.com">
             </div>
             <div class="field-group">
-                <label>URL匹配正则</label>
+                <label><i class="fas fa-code"></i> URL匹配正则</label>
                 <div id="detailUrlContainer">
                     <input type="text" id="detailUrl" placeholder="/go/.*">
                 </div>
@@ -635,7 +635,7 @@
                 </select>
             </div>
             <div class="field-group">
-                <label>目标页面参数名</label>
+                <label><i class="fas fa-arrow-right"></i> 目标页面参数名 <a class="dsl-goto" href="https://github.com/qiufengcute/SkipTransfer/blob/main/DSL.md">DSL 文档</a></label>
                 <div id="detailParamContainer">
                     <input type="text" id="detailParam" placeholder="redirect">
                 </div>

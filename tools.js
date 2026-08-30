@@ -18,17 +18,24 @@ async function getIsFirst() {
 export function getRedirectParams() { return REDIRECT_PARAMS; }
 
 export async function getTransfers() {
-    if (await getIsFirst()) {
+    const isFirst = await getIsFirst();
+
+    if (isFirst) {
         const response = await fetch(chrome.runtime.getURL('default_transfers.json'));
         const defaultData = await response.json();
         setTransfers(defaultData);
         return defaultData;
     }
-    chrome.storage.local.get([STORAGE_KEY], (result) => {
-        return result[STORAGE_KEY] || [];
+
+    return new Promise((resolve) => {
+        chrome.storage.local.get([STORAGE_KEY], (result) => {
+            resolve(result[STORAGE_KEY] || []);
+        });
     });
 }
 
 export function setTransfers(transfers) {
-    chrome.storage.local.set({ [STORAGE_KEY]: transfers });
+    return new Promise((resolve) => {
+        chrome.storage.local.set({ [STORAGE_KEY]: transfers }, () => resolve());
+    });
 }

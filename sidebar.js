@@ -1,410 +1,423 @@
 import { getTransfers, setTransfers, getRedirectParams } from './tools.js';
 
-// DOM 元素
-const overlay = document.getElementById('modalOverlay');
-const addBtn = document.getElementById('addTransferBtn');
-const cancelBtn = document.getElementById('modalCancelBtn');
-const saveBtn = document.getElementById('modalSaveBtn');
-
-const detailOverlay = document.getElementById('detailOverlay');
-const detailCloseBtn = document.getElementById('detailCloseBtn');
-const detailSaveBtn = document.getElementById('detailSaveBtn');
-const detailTitle = document.getElementById('detailTitle');
-const detailName = document.getElementById('detailName');
-const detailHomePage = document.getElementById('detailHomePage');
-const detailUrlContainer = document.getElementById('detailUrlContainer');
-const detailParamContainer = document.getElementById('detailParamContainer');
-
-const nameInput = document.getElementById('modalName');
-const homePageInput = document.getElementById('modalHomePage');
-const urlInput = document.getElementById('modalUrl');
-const paramInput = document.getElementById('modalParam');
-const urlTypeSelect = document.getElementById('modalUrlType');
-const paramTypeSelect = document.getElementById('modalParamType');
-
-const detailNameInput = document.getElementById('detailName');
-const detailHomePageInput = document.getElementById('detailHomePage');
-const detailUrlInput = document.getElementById('detailUrl');
-const detailParamInput = document.getElementById('detailParam');
-const detailUrlTypeSelect = document.getElementById('detailUrlType');
-const detailParamTypeSelect = document.getElementById('detailParamType');
-
-let currentDetailCard = null;
-
-function updateCount() {
-    const cards = document.querySelectorAll('.transfer-card');
-    const badge = document.getElementById('cardCount');
-    if (badge) badge.textContent = cards.length;
+const ui = {
+    overlay: document.getElementById('modalOverlay'),
+    addBtn: document.getElementById('addTransferBtn'),
+    cancelBtn: document.getElementById('modalCancelBtn'),
+    saveBtn: document.getElementById('modalSaveBtn'),
+    detailOverlay: document.getElementById('detailOverlay'),
+    detailCloseBtn: document.getElementById('detailCloseBtn'),
+    detailSaveBtn: document.getElementById('detailSaveBtn'),
+    detailTitle: document.getElementById('detailTitle'),
+    detailName: document.getElementById('detailName'),
+    detailHomePage: document.getElementById('detailHomePage'),
+    detailUrlContainer: document.getElementById('detailUrlContainer'),
+    detailParamContainer: document.getElementById('detailParamContainer'),
+    cardList: document.getElementById('cardList'),
+    modalName: document.getElementById('modalName'),
+    modalHomePage: document.getElementById('modalHomePage'),
+    modalUrl: document.getElementById('modalUrl'),
+    modalParam: document.getElementById('modalParam'),
+    modalUrlType: document.getElementById('modalUrlType'),
+    modalParamType: document.getElementById('modalParamType'),
+    modalUrlContainer: document.getElementById('modalUrlContainer'),
+    modalParamContainer: document.getElementById('modalParamContainer'),
+    detailUrl: document.getElementById('detailUrl'),
+    detailParam: document.getElementById('detailParam'),
+    detailUrlType: document.getElementById('detailUrlType'),
+    detailParamType: document.getElementById('detailParamType')
 };
 
+const state = {
+    currentDetailCard: null
+};
+
+let modalUrlInput = ui.modalUrl;
+let modalParamInput = ui.modalParam;
+let detailUrlInput = ui.detailUrl;
+let detailParamInput = ui.detailParam;
+
+function updateCount() {
+    const badge = document.getElementById('cardCount');
+    if (badge) {
+        badge.textContent = document.querySelectorAll('.transfer-card').length;
+    }
+}
+
+function buildEmptyState() {
+    return `
+        <div style="text-align:center; color:#8b949e; padding:30px 0; font-size:14px;">
+            <i class="fas fa-inbox" style="font-size:24px; display:block; margin-bottom:10px;"></i>
+            暂无中转规则，点击下方添加
+        </div>
+    `;
+}
+
+function normalizeFieldValue(rawValue, type, fallback = '') {
+    const value = String(rawValue ?? '').trim();
+
+    if (!value) {
+        return fallback;
+    }
+
+    if (type === '多个') {
+        return value
+            .split(/\n+/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return value;
+}
+
+function createInputElement({ id, value = '', placeholder = '', className = '' }) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = id;
+    input.value = value;
+    input.placeholder = placeholder;
+    if (className) {
+        input.className = className;
+    }
+    return input;
+}
+
+function createTextareaElement({ id, value = '', placeholder = '', rows = 3, className = '' }) {
+    const textarea = document.createElement('textarea');
+    textarea.id = id;
+    textarea.value = value;
+    textarea.placeholder = placeholder;
+    textarea.rows = rows;
+    if (className) {
+        textarea.className = className;
+    }
+    return textarea;
+}
+
+function replaceField(container, currentElement, { id, value, placeholder, multiline, className = '' }) {
+    const nextElement = multiline
+        ? createTextareaElement({
+            id,
+            value,
+            placeholder,
+            rows: Math.min(Math.max((value.split('\n').length || 1), 2), 8),
+            className
+        })
+        : createInputElement({
+            id,
+            value,
+            placeholder,
+            className
+        });
+
+    if (currentElement && currentElement.parentNode === container) {
+        container.replaceChild(nextElement, currentElement);
+    } else {
+        container.innerHTML = '';
+        container.appendChild(nextElement);
+    }
+
+    return nextElement;
+}
+
+function syncFieldMode(container, currentElement, type, { id, value = '', placeholder = '' }) {
+    const isMulti = type === '多个';
+
+    if (isMulti && currentElement?.tagName !== 'TEXTAREA') {
+        return replaceField(container, currentElement, {
+            id,
+            value: value,
+            placeholder,
+            multiline: true,
+            className: 'input-multiline'
+        });
+    }
+
+    if (!isMulti && currentElement?.tagName !== 'INPUT') {
+        return replaceField(container, currentElement, {
+            id,
+            value: value,
+            placeholder,
+            multiline: false
+        });
+    }
+
+    if (currentElement) {
+        currentElement.value = value;
+        currentElement.placeholder = placeholder;
+    }
+
+    return currentElement;
+}
+
+function buildTransferItemFromForm({ nameElement, homePageElement, urlElement, paramElement, urlTypeElement, paramTypeElement }) {
+    const name = (nameElement.value || '').trim() || '未命名';
+    const homePage = (homePageElement.value || '').trim() || 'https://example.com';
+
+    return {
+        name,
+        homePage,
+        url: normalizeFieldValue(urlElement.value, urlTypeElement.value, '.*'),
+        param: normalizeFieldValue(paramElement.value, paramTypeElement.value, 'redirect')
+    };
+}
+
 async function renderCards() {
-    const cardList = document.getElementById('cardList');
     const transfers = await getTransfers();
-    
+
     if (!Array.isArray(transfers) || transfers.length === 0) {
-        cardList.innerHTML = `
-            <div style="text-align:center; color:#8b949e; padding:30px 0; font-size:14px;">
-                <i class="fas fa-inbox" style="font-size:24px; display:block; margin-bottom:10px;"></i>
-                暂无中转规则，点击下方添加
-            </div>
-        `;
+        ui.cardList.innerHTML = buildEmptyState();
         updateCount();
         return;
     }
-    
-    cardList.innerHTML = transfers.map((item, index) => `
-        <div class="transfer-card" data-index="${index}">
-            <div class="card-left">
-                <img width="20" src="./imgs/web.png">
-                <a href="${item.homePage}" class="card-name">${item.name || '未命名'}</a>
+
+    ui.cardList.innerHTML = transfers
+        .map((item, index) => `
+            <div class="transfer-card" data-index="${index}">
+                <div class="card-left">
+                    <img width="20" src="./imgs/web.png" alt="site icon">
+                    <a href="${item.homePage || '#'}" class="card-name">${item.name || '未命名'}</a>
+                </div>
+                <div class="card-actions">
+                    <button class="settings-btn" data-index="${index}" title="编辑"><i class="fas fa-cog"></i></button>
+                    <button class="del-btn" data-index="${index}" title="删除"><i class="fas fa-trash"></i></button>
+                </div>
             </div>
-            <div class="card-actions">
-                <button class="settings-btn" data-index="${index}" title="编辑"><i class="fas fa-cog"></i></button>
-                <button class="del-btn" data-index="${index}" title="删除"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `).join('');
-    
+        `)
+        .join('');
+
     updateCount();
-    console.log('刷新成功: ', transfers);
 }
 
+function syncModalInputHeights() {
+    modalUrlInput = syncFieldMode(ui.modalUrlContainer, modalUrlInput, ui.modalUrlType.value, {
+        id: 'modalUrl',
+        value: modalUrlInput?.value || 'example.com/go/',
+        placeholder: 'example.com/go/.*'
+    });
 
-// ===== 输入框切换 =====
-function updateInputHeights() {
-    const urlType = urlTypeSelect.value;
-    const paramType = paramTypeSelect.value;
-
-    // URL 输入框
-    const urlParent = urlInput.parentNode;
-    const isUrlMulti = urlType === '多个';
-
-    if (isUrlMulti && urlInput.tagName !== 'TEXTAREA') {
-        const newEl = document.createElement('textarea');
-        newEl.id = 'modalUrl';
-        newEl.placeholder = '每行一个正则';
-        newEl.value = urlInput.value;
-        newEl.className = 'input-multiline';
-        urlParent.replaceChild(newEl, urlInput);
-        urlInput = newEl;
-    } else if (!isUrlMulti && urlInput.tagName !== 'INPUT') {
-        const newEl = document.createElement('input');
-        newEl.type = 'text';
-        newEl.id = 'modalUrl';
-        newEl.placeholder = 'example.com/go/.*';
-        newEl.value = urlInput.value;
-        urlParent.replaceChild(newEl, urlInput);
-        urlInput = newEl;
-    }
-
-    // 参数输入框
-    const paramParent = paramInput.parentNode;
-    const isParamMulti = paramType === '多个';
-
-    if (isParamMulti && paramInput.tagName !== 'TEXTAREA') {
-        const newEl = document.createElement('textarea');
-        newEl.id = 'modalParam';
-        newEl.placeholder = '每行一个参数';
-        newEl.value = paramInput.value;
-        newEl.className = 'input-multiline';
-        paramParent.replaceChild(newEl, paramInput);
-        paramInput = newEl;
-    } else if (!isParamMulti && paramInput.tagName !== 'INPUT') {
-        const newEl = document.createElement('input');
-        newEl.type = 'text';
-        newEl.id = 'modalParam';
-        newEl.placeholder = 'redirect';
-        newEl.value = paramInput.value;
-        paramParent.replaceChild(newEl, paramInput);
-        paramInput = newEl;
-    }
+    modalParamInput = syncFieldMode(ui.modalParamContainer, modalParamInput, ui.modalParamType.value, {
+        id: 'modalParam',
+        value: modalParamInput?.value || 'redirect',
+        placeholder: 'redirect'
+    });
 }
 
-function updateDetailInputHeights() {
-    const urlType = detailUrlTypeSelect.value;
-    const paramType = detailParamTypeSelect.value;
+function syncDetailInputHeights() {
+    detailUrlInput = syncFieldMode(ui.detailUrlContainer, detailUrlInput, ui.detailUrlType.value, {
+        id: 'detailUrl',
+        value: detailUrlInput?.value || '.*',
+        placeholder: 'example.com/go/.*'
+    });
 
-    // URL 输入框
-    const urlParent = detailUrlInput.parentNode;
-    const isUrlMulti = urlType === '多个';
-
-    if (isUrlMulti && detailUrlInput.tagName !== 'TEXTAREA') {
-        const newEl = document.createElement('textarea');
-        newEl.id = 'modalUrl';
-        newEl.placeholder = '每行一个正则';
-        newEl.value = detailUrlInput.value;
-        newEl.className = 'input-multiline';
-        urlParent.replaceChild(newEl, detailUrlInput);
-        detailUrlInput = newEl;
-    } else if (!isUrlMulti && detailUrlInput.tagName !== 'INPUT') {
-        const newEl = document.createElement('input');
-        newEl.type = 'text';
-        newEl.id = 'modalUrl';
-        newEl.placeholder = 'example.com/go/.*';
-        newEl.value = detailUrlInput.value;
-        urlParent.replaceChild(newEl, detailUrlInput);
-        detailUrlInput = newEl;
-    }
-
-    // 参数输入框
-    const paramParent = detailParamInput.parentNode;
-    const isParamMulti = paramType === '多个';
-
-    if (isParamMulti && detailParamInput.tagName !== 'TEXTAREA') {
-        const newEl = document.createElement('textarea');
-        newEl.id = 'modalParam';
-        newEl.placeholder = '每行一个参数';
-        newEl.value = detailParamInput.value;
-        newEl.className = 'input-multiline';
-        paramParent.replaceChild(newEl, detailParamInput);
-        detailParamInput = newEl;
-    } else if (!isParamMulti && detailParamInput.tagName !== 'INPUT') {
-        const newEl = document.createElement('input');
-        newEl.type = 'text';
-        newEl.id = 'modalParam';
-        newEl.placeholder = 'redirect';
-        newEl.value = detailParamInput.value;
-        paramParent.replaceChild(newEl, detailParamInput);
-        detailParamInput = newEl;
-    }
+    detailParamInput = syncFieldMode(ui.detailParamContainer, detailParamInput, ui.detailParamType.value, {
+        id: 'detailParam',
+        value: detailParamInput?.value || 'redirect',
+        placeholder: 'redirect'
+    });
 }
 
-// ===== 显示详情 =====
-window.showDetail = async (card) => {
-    if (!card) return;
-    currentDetailCard = card;
-    const index = card.dataset.index;
-    const transfers = await getTransfers();
-    const transfer = transfers[index];
+function toggleOverlay(overlayElement, isOpen) {
+    if (!overlayElement) return;
 
-    const name = transfer.name || '';
-    const homePage = transfer.homePage || '';
-    
-    const url = transfer.url || '';
-    const param = transfer.param || '';
-
-    detailTitle.textContent = '编辑: ' + name;
-    detailName.value = name;
-    detailHomePage.value = homePage;
-
-    // URL
-    if (Array.isArray(url)) {
-        detailUrlTypeSelect.value = '多个';
-        const textarea = document.createElement('textarea');
-        textarea.id = 'detailUrl';
-        textarea.value = url.join('\n');
-        textarea.rows = Math.min(url.length + 1, 8);
-        detailUrlContainer.innerHTML = '';
-        detailUrlContainer.appendChild(textarea);
-    } else {
-        detailUrlTypeSelect.value = '单个';
-        detailUrlContainer.innerHTML = `<input type="text" id="detailUrl" value="${url}">`;
-    }
-
-    // Param
-    if (Array.isArray(param)) {
-        detailParamTypeSelect.value = '多个';
-        const textarea = document.createElement('textarea');
-        textarea.id = 'detailUrl';
-        textarea.value = param.join('\n');
-        textarea.rows = Math.min(param.length + 1, 8);
-        detailParamContainer.innerHTML = '';
-        detailParamContainer.appendChild(textarea);
-    } else {
-        detailParamTypeSelect.value = '单个';
-        detailParamContainer.innerHTML = `<input type="text" id="detailParam" value="${param}">`;
-    }
-
-    detailOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-};
-
-function closeDetail() {
-    detailOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-    currentDetailCard = null;
+    overlayElement.classList.toggle('active', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
 }
 
-async function saveDetail() {
-    if (!currentDetailCard) return;
-
-    const name = detailNameInput.value.trim() || '未命名';
-    const homePage = detailHomePageInput.value.trim() || 'https://example.com';
-    const url = detailUrlInput.value.trim() || '.*';
-    const param = detailParamInput.value.trim() || 'redirect';
-    const urlType = detailUrlTypeSelect.value;
-    const paramType = detailParamTypeSelect.value;
-
-    const item = {
-        name: name,
-        homePage: homePage
-    };
-
-    if (urlType === '多个') {
-        item.url = url.split('\n').filter(s => s.trim());
-    } else {
-        item.url = url;
-    }
-    item.url.replace(/^https?:\/\//, '')
-
-    if (paramType === '多个') {
-        item.param = param.split('\n').filter(s => s.trim());
-    } else {
-        item.param = param;
-    }
-
-    const transfers = await getTransfers();
-    const index = parseInt(currentDetailCard.dataset.index);
-    
-    if (!isNaN(index) && index >= 0 && index < transfers.length) {
-        transfers[index] = item;
-        
-        await setTransfers(transfers);
-        console.log('保存成功:', item);
-    }
-    closeDetail();
-    await renderCards();
-}
-
-// ===== 新建弹窗 =====
 function openModal() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-        const url = new URL(tab.url);
-        const fullUrl = url.hostname + url.pathname
-        const params = [...url.searchParams.keys()];
-        const redirectParams = getRedirectParams();
-        let paramResult = null;
 
-        for (const p of redirectParams) {
-            if (params.includes(p)) {
-                paramResult = p;
-                break;
-            }
+        if (!tab || !tab.url) {
+            return;
         }
 
-        nameInput.value = tab.title || '新中转';
-        homePageInput.value = (url.protocol && fullUrl) ? (url.protocol + '//' + fullUrl) : 'https://example.com/';
-        urlInput.value = fullUrl || 'example.com/go/';
-        paramInput.value = paramResult || 'redirect';
-        urlTypeSelect.value = '单个';
-        paramTypeSelect.value = '单个';
+        try {
+            const url = new URL(tab.url);
+            const fullUrl = `${url.hostname}${url.pathname}`;
+            const params = [...url.searchParams.keys()];
+            const redirectParams = getRedirectParams();
+            const paramResult = redirectParams.find((param) => params.includes(param)) || 'redirect';
 
-        const urlParent = urlInput.parentNode;
-        if (urlInput.tagName === 'TEXTAREA') {
-            const newEl = document.createElement('input');
-            newEl.type = 'text';
-            newEl.id = 'modalUrl';
-            newEl.placeholder = 'example.com/go/.*';
-            newEl.value = 'example.com/go/';
-            urlParent.replaceChild(newEl, urlInput);
-            urlInput = newEl;
+            ui.modalName.value = tab.title || '新中转';
+            ui.modalHomePage.value = url.protocol ? `${url.protocol}//${fullUrl}` : 'https://example.com/';
+            ui.modalUrl.value = fullUrl || 'example.com/go/';
+            ui.modalParam.value = paramResult;
+            ui.modalUrlType.value = '单个';
+            ui.modalParamType.value = '单个';
+
+            modalUrlInput = syncFieldMode(ui.modalUrlContainer, modalUrlInput, '单个', {
+                id: 'modalUrl',
+                value: fullUrl || 'example.com/go/',
+                placeholder: 'example.com/go/.*'
+            });
+
+            modalParamInput = syncFieldMode(ui.modalParamContainer, modalParamInput, '单个', {
+                id: 'modalParam',
+                value: paramResult,
+                placeholder: 'redirect'
+            });
+
+            toggleOverlay(ui.overlay, true);
+        } catch (error) {
+            console.error('打开添加弹窗失败:', error);
         }
-
-        const paramParent = paramInput.parentNode;
-        if (paramInput.tagName === 'TEXTAREA') {
-            const newEl = document.createElement('input');
-            newEl.type = 'text';
-            newEl.id = 'modalParam';
-            newEl.placeholder = 'redirect';
-            newEl.value = 'redirect';
-            paramParent.replaceChild(newEl, paramInput);
-            paramInput = newEl;
-        }
-
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
     });
 }
 
 function closeModal() {
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
+    toggleOverlay(ui.overlay, false);
 }
 
-// ===== 事件绑定 =====
-urlTypeSelect.addEventListener('change', updateInputHeights);
-paramTypeSelect.addEventListener('change', updateInputHeights);
-
-detailUrlTypeSelect.addEventListener('change', updateDetailInputHeights);
-detailParamTypeSelect.addEventListener('change', updateDetailInputHeights);
-
-addBtn.addEventListener('click', openModal);
-cancelBtn.addEventListener('click', closeModal);
-overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closeModal();
-});
-
-detailCloseBtn.addEventListener('click', closeDetail);
-detailSaveBtn.addEventListener('click', saveDetail);
-detailOverlay.addEventListener('click', function(e) {
-    if (e.target === detailOverlay) closeDetail();
-});
-
-saveBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const name = nameInput.value.trim() || '未命名';
-    const homePage = homePageInput.value.trim() || 'https://example.com';
-    const url = urlInput.value.trim() || '.*';
-    const param = paramInput.value.trim() || 'redirect';
-    const urlType = urlTypeSelect.value;
-    const paramType = paramTypeSelect.value;
-
-    const item = {
-        name: name,
-        homePage: homePage
-    };
-
-    if (urlType === '多个') {
-        item.url = url.split('\n').filter(s => s.trim());
-    } else {
-        item.url = url;
-    }
-    item.url.replace(/^https?:\/\//, '')
-
-    if (paramType === '多个') {
-        item.param = param.split('\n').filter(s => s.trim());
-    } else {
-        item.param = param;
-    }
-
-    const current = await getTransfers();
-    current.push(item);
-    setTransfers(current);
-    console.log('添加成功: ', item);
-    closeModal();
-    await renderCards();
-});
-
-document.getElementById('cardList').addEventListener('click', async function(e) {
-    const delBtn = e.target.closest('.del-btn');
-    if (delBtn) {
-        e.stopPropagation();
-        const index = parseInt(delBtn.dataset.index);
-        if (confirm('确定要删除这个规则吗？')) {
-            const transfers = await getTransfers();
-            console.log('删除成功: ', transfers[index]);
-            transfers.splice(index, 1);
-            await setTransfers(transfers);
-            await renderCards();
-        }
+async function showDetail(card) {
+    if (!card) {
         return;
     }
-    
-    const settingsBtn = e.target.closest('.settings-btn');
-    if (settingsBtn) {
-        e.stopPropagation();
-        const card = settingsBtn.closest('.transfer-card');
-        if (card) showDetail(card);
-    }
-});
 
-document.getElementById('cardList').addEventListener('contextmenu', function(e) {
-    const card = e.target.closest('.transfer-card');
-    if (card) {
-        e.preventDefault();
-        window.showDetail(card);
-    }
-});
+    state.currentDetailCard = card;
+    const index = Number.parseInt(card.dataset.index, 10);
+    const transfers = await getTransfers();
+    const transfer = transfers[index];
 
+    if (!transfer) {
+        return;
+    }
+
+    const urlValue = Array.isArray(transfer.url) ? transfer.url.join('\n') : String(transfer.url || '.*');
+    const paramValue = Array.isArray(transfer.param) ? transfer.param.join('\n') : String(transfer.param || 'redirect');
+
+    ui.detailTitle.textContent = `编辑: ${transfer.name || '未命名'}`;
+    ui.detailName.value = transfer.name || '';
+    ui.detailHomePage.value = transfer.homePage || '';
+
+    ui.detailUrlType.value = Array.isArray(transfer.url) ? '多个' : '单个';
+    ui.detailParamType.value = Array.isArray(transfer.param) ? '多个' : '单个';
+
+    detailUrlInput = syncFieldMode(ui.detailUrlContainer, detailUrlInput, ui.detailUrlType.value, {
+        id: 'detailUrl',
+        value: urlValue,
+        placeholder: 'example.com/go/.*'
+    });
+
+    detailParamInput = syncFieldMode(ui.detailParamContainer, detailParamInput, ui.detailParamType.value, {
+        id: 'detailParam',
+        value: paramValue,
+        placeholder: 'redirect'
+    });
+
+    toggleOverlay(ui.detailOverlay, true);
+}
+
+function closeDetail() {
+    toggleOverlay(ui.detailOverlay, false);
+    state.currentDetailCard = null;
+}
+
+async function saveDetail() {
+    if (!state.currentDetailCard) {
+        return;
+    }
+
+    const item = buildTransferItemFromForm({
+        nameElement: ui.detailName,
+        homePageElement: ui.detailHomePage,
+        urlElement: detailUrlInput,
+        paramElement: detailParamInput,
+        urlTypeElement: ui.detailUrlType,
+        paramTypeElement: ui.detailParamType
+    });
+
+    const transfers = await getTransfers();
+    const index = Number.parseInt(state.currentDetailCard.dataset.index, 10);
+
+    if (!Number.isNaN(index) && index >= 0 && index < transfers.length) {
+        transfers[index] = item;
+        await setTransfers(transfers);
+    }
+
+    closeDetail();
+    await renderCards();
+}
+
+async function saveNewTransfer(event) {
+    event.preventDefault();
+
+    const item = buildTransferItemFromForm({
+        nameElement: ui.modalName,
+        homePageElement: ui.modalHomePage,
+        urlElement: modalUrlInput,
+        paramElement: modalParamInput,
+        urlTypeElement: ui.modalUrlType,
+        paramTypeElement: ui.modalParamType
+    });
+
+    const transfers = await getTransfers();
+    transfers.push(item);
+    await setTransfers(transfers);
+    closeModal();
+    await renderCards();
+}
+
+function bindEvents() {
+    ui.modalUrlType.addEventListener('change', syncModalInputHeights);
+    ui.modalParamType.addEventListener('change', syncModalInputHeights);
+    ui.detailUrlType.addEventListener('change', syncDetailInputHeights);
+    ui.detailParamType.addEventListener('change', syncDetailInputHeights);
+
+    ui.addBtn.addEventListener('click', openModal);
+    ui.cancelBtn.addEventListener('click', closeModal);
+    ui.saveBtn.addEventListener('click', saveNewTransfer);
+
+    ui.detailCloseBtn.addEventListener('click', closeDetail);
+    ui.detailSaveBtn.addEventListener('click', saveDetail);
+
+    ui.overlay.addEventListener('click', (event) => {
+        if (event.target === ui.overlay) {
+            closeModal();
+        }
+    });
+
+    ui.detailOverlay.addEventListener('click', (event) => {
+        if (event.target === ui.detailOverlay) {
+            closeDetail();
+        }
+    });
+
+    ui.cardList.addEventListener('click', async (event) => {
+        const deleteButton = event.target.closest('.del-btn');
+        if (deleteButton) {
+            event.stopPropagation();
+            const index = Number.parseInt(deleteButton.dataset.index, 10);
+
+            if (confirm('确定要删除这个规则吗？')) {
+                const transfers = await getTransfers();
+                transfers.splice(index, 1);
+                await setTransfers(transfers);
+                await renderCards();
+            }
+            return;
+        }
+
+        const settingsButton = event.target.closest('.settings-btn');
+        if (settingsButton) {
+            event.stopPropagation();
+            const card = settingsButton.closest('.transfer-card');
+            if (card) {
+                await showDetail(card);
+            }
+        }
+    });
+
+    ui.cardList.addEventListener('contextmenu', async (event) => {
+        const card = event.target.closest('.transfer-card');
+        if (card) {
+            event.preventDefault();
+            await showDetail(card);
+        }
+    });
+}
+
+window.showDetail = showDetail;
+
+bindEvents();
 renderCards();
