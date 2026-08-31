@@ -58,3 +58,9 @@ export function setImgCache(url, img) {
         chrome.storage.local.set({ [IMGCACHE_KEY]: { ...await getImgCache(), [url]: img } }, () => resolve());
     });
 }
+
+export function clearAllImgCache() {
+    return new Promise(async (resolve) => {
+        chrome.storage.local.set({ [IMGCACHE_KEY]: {} }, () => resolve());
+    });
+}

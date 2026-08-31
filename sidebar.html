@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中转页管理器 · 侧边栏</title>
+    <title>中转页管理器</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -160,7 +160,7 @@
             background: #1f2937;
         }
 
-        .add-transfer-btn {
+        .bottom-btn {
             width: 100%;
             padding: 12px 0;
             background: #1f6feb;
@@ -178,13 +178,13 @@
             gap: 8px;
         }
 
-        .add-transfer-btn:hover {
+        .bottom-btn:hover {
             background: #388bfd;
             transform: scale(0.98);
             box-shadow: 0 6px 20px rgba(31, 111, 235, 0.35);
         }
 
-        .add-transfer-btn i {
+        .bottom-btn i {
             font-size: 15px;
         }
 
@@ -556,8 +556,14 @@
             <!-- 卡片由JS动态渲染 -->
         </div>
 
-        <button class="add-transfer-btn" id="addTransferBtn">
+        <button class="bottom-btn" id="addTransferBtn">
             <i class="fas fa-plus-circle"></i> 添加中转页
+        </button>
+
+        <br>
+
+        <button class="bottom-btn" id="clearImgCacheBtn">
+            <i class="fas fa-trash"></i> 清除图标缓存
         </button>
     </div>
 

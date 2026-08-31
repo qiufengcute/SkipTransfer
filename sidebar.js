@@ -1,10 +1,11 @@
-import { getTransfers, setTransfers, getRedirectParams, getImgCache, setImgCache } from './tools.js';
+import { getTransfers, setTransfers, getRedirectParams, getImgCache, setImgCache, clearAllImgCache } from './tools.js';
 
 const ui = {
     overlay: document.getElementById('modalOverlay'),
     addBtn: document.getElementById('addTransferBtn'),
     cancelBtn: document.getElementById('modalCancelBtn'),
     saveBtn: document.getElementById('modalSaveBtn'),
+    clearImgCacheBtn: document.getElementById('clearImgCacheBtn'),
     detailOverlay: document.getElementById('detailOverlay'),
     detailCloseBtn: document.getElementById('detailCloseBtn'),
     detailSaveBtn: document.getElementById('detailSaveBtn'),
@@ -440,6 +441,11 @@ async function saveNewTransfer(event) {
     await renderCards();
 }
 
+async function clearImgCache() {
+    await clearAllImgCache();
+    renderCards();
+}
+
 function bindEvents() {
     ui.modalUrlType.addEventListener('change', syncModalInputHeights);
     ui.modalParamType.addEventListener('change', syncModalInputHeights);
@@ -449,6 +455,7 @@ function bindEvents() {
     ui.addBtn.addEventListener('click', openModal);
     ui.cancelBtn.addEventListener('click', closeModal);
     ui.saveBtn.addEventListener('click', saveNewTransfer);
+    ui.clearImgCacheBtn.addEventListener('click', clearImgCache);
 
     ui.detailCloseBtn.addEventListener('click', closeDetail);
     ui.detailSaveBtn.addEventListener('click', saveDetail);

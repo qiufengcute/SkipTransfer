@@ -54,7 +54,7 @@
         "param": "target"
     },
     {
-        "name": "Curse",
+        "name": "Curseforge",
         "homePage": "https://www.curseforge.com/",
         "url": "curseforge.com/linkout",
         "param": "remoteUrl"
