@@ -1,4 +1,4 @@
-import { getTransfers, setTransfers, getRedirectParams } from './tools.js';
+import { getTransfers, setTransfers, getRedirectParams, getImgCache, setImgCache } from './tools.js';
 
 const ui = {
     overlay: document.getElementById('modalOverlay'),
@@ -152,7 +152,11 @@ function syncFieldMode(container, currentElement, type, { id, value = '', placeh
 
 function buildTransferItemFromForm({ nameElement, homePageElement, urlElement, paramElement, urlTypeElement, paramTypeElement }) {
     const name = (nameElement.value || '').trim() || '未命名';
-    const homePage = (homePageElement.value || '').trim() || 'https://example.com';
+    let homePage = (homePageElement.value || '').trim() || 'https://example.com';
+
+    if (!(homePage.startsWith('http://') || homePage.startsWith('https://'))) {
+        homePage = 'https://' + homePage;
+    }
 
     return {
         name,
@@ -160,6 +164,83 @@ function buildTransferItemFromForm({ nameElement, homePageElement, urlElement, p
         url: normalizeFieldValue(urlElement.value, urlTypeElement.value, '.*'),
         param: normalizeFieldValue(paramElement.value, paramTypeElement.value, 'redirect')
     };
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(blob);
+    });
+}
+
+function setCardsIcon(transfers) {
+    transfers.forEach(async (item, index) => {
+        const iconElement = document.getElementById(`card-icon-${index}`);
+        iconElement.addEventListener('error', () => {
+            iconElement.src = './imgs/error.png';
+        });
+        if (iconElement) {
+            const url = item.homePage;
+            let result = await getImgCache(url);
+            let display = null;
+
+            if (!result) {
+                try {
+                    const response = await fetch(url, {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    });
+                    const html = await response.text();
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const selectors = [
+                        'link[rel="icon"]',
+                        'link[rel="shortcut icon"]',
+                        'link[rel="apple-touch-icon"]',
+                        'link[rel="apple-touch-icon-precomposed"]'
+                    ];
+
+                    for (const selector of selectors) {
+                        const icon = doc.querySelector(selector);
+                        if (icon) {
+                            result = icon.getAttribute('href');
+                            break
+                        }
+                    }
+
+                    if (!result) result = 'favicon.ico';
+                } catch (e) {
+                    console.log('[Sidebar] On set cards icon, fetch html failed: ', e);
+                    result = 'favicon.ico';
+                }
+                result = new URL(result, url).href;
+
+                try {
+                    console.log('[Sidebar] Fetching icon from: ', result);
+                    const icon = await fetch(result, {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    });
+                    const blob = await icon.blob();
+
+                    if (blob.type.startsWith('image/')) {
+                        display = await blobToBase64(blob);
+                    }
+                } catch (e) {
+                    console.log('[Sidebar] On set cards icon, get icon base64 text failed: ', e);
+                    result = null;
+                }
+
+                if (display) {
+                    setImgCache(url, display);
+                    result = display;
+                }
+            }
+
+            iconElement.src = result;
+        }
+    });
 }
 
 async function renderCards() {
@@ -175,7 +256,7 @@ async function renderCards() {
         .map((item, index) => `
             <div class="transfer-card" data-index="${index}">
                 <div class="card-left">
-                    <img width="20" src="./imgs/web.png" alt="site icon">
+                    <img width="20" id="card-icon-${index}" src="./imgs/loading.png" alt="site icon">
                     <a href="${item.homePage || '#'}" class="card-name">${item.name || '未命名'}</a>
                 </div>
                 <div class="card-actions">
@@ -186,6 +267,7 @@ async function renderCards() {
         `)
         .join('');
 
+    setCardsIcon(transfers);
     updateCount();
 }
 

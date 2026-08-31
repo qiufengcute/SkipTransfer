@@ -39,6 +39,10 @@ function runElementCommand(tabId, selector, selectorDataCommand) {
                                 })
                             }
                         })
+                    } else {
+                        result = data[0]?.getAttribute;
+                        if (result) result = result(selectorDataCommand);
+                        else result = null;
                     }
 
                     return {
@@ -82,7 +86,7 @@ export async function parse(text, url, tabId) {
     // [Element(Query 选择器)] [Arg(名称)]         // Selector command / <Name> command
     // .属性名 .[HTML] .[JumpInit|属性名/[HTML]]   // Data command
     // => BASE64                                 // Last command
-    const match = text.trim().match(/^\[(.*?)\s*\(\s*(.*?)\s*\)\.?(.*?)(?:\s*=>\s*(.*?))?\]$/);
+    const match = text.trim().match(/^\[\s*(.*?)\s*\(\s*(.*?)\s*\)\s*\.\s*?(.*?)(?:\s*=>\s*(.*?))?\s*\]$/);
     if (!match) throw new DSLParseError('Syntax analysis faild.');
     const selectorCommand = match[1].trim().toUpperCase();
     const selectorText = match[2].trim();

@@ -4,6 +4,7 @@ const REDIRECT_PARAMS = [
 ];
 
 const STORAGE_KEY = 'SkipTransfer_Transfers';
+const IMGCACHE_KEY = 'SkipTransfer_ImgCache';
 const FIRST_KEY = 'SkipTransfer_First';
 
 async function getIsFirst() {
@@ -37,5 +38,23 @@ export async function getTransfers() {
 export function setTransfers(transfers) {
     return new Promise((resolve) => {
         chrome.storage.local.set({ [STORAGE_KEY]: transfers }, () => resolve());
+    });
+}
+
+export function getImgCache(url = null) {
+    return new Promise((resolve) => {
+        chrome.storage.local.get([IMGCACHE_KEY], (result) => {
+            if (url) {
+                const imgCaches = result[IMGCACHE_KEY] || {};
+                resolve(imgCaches[url] || null);
+            }
+            else resolve(result[IMGCACHE_KEY] || {});
+        });
+    });
+}
+
+export function setImgCache(url, img) {
+    return new Promise(async (resolve) => {
+        chrome.storage.local.set({ [IMGCACHE_KEY]: { ...await getImgCache(), [url]: img } }, () => resolve());
     });
 }

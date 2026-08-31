@@ -168,12 +168,6 @@
         "param": "url"
     },
     {
-        "name": "360doc",
-        "homePage": "https://www.360doc.cn/",
-        "url": "360doc.cn/outlink.html",
-        "param": "url"
-    },
-    {
         "name": "Instagram",
         "homePage": "https://www.instagram.com/",
         "url": "instagram.com/linkshim",
