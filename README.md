@@ -6,6 +6,8 @@
 [![](https://img.shields.io/badge/dynamic/json?label=Edge+商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 [![](https://img.shields.io/badge/dynamic/json?label=Edge+商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
+[![](./Get_it_from_edge)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+
 🚀 自动跳过网站中转/重定向页面，直达目标链接。
 
 适用于所有 **Chromium 内核** 的浏览器（Edge、Chrome、Brave、Vivaldi 等）。当你点击链接进入中转页（如 `link.zhihu.cn` 等）时，扩展会自动检测目标链接并直接跳转，省去等待和手动点击的步骤。
