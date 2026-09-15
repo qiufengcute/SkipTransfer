@@ -3,9 +3,8 @@
 ![支持浏览器](https://img.shields.io/badge/Edge-支持-0078D7?logo=microsoftedge&logoColor=white)
 ![支持浏览器](https://img.shields.io/badge/Chrome-支持-4285F4?logo=googlechrome&logoColor=white)
 ![开源协议](https://img.shields.io/badge/协议-MIT-green)
-![Edge 商店](https://img.shields.io/badge/Edge_商店-审核中-blue)
-[![](https://img.shields.io/badge/dynamic/json?label=Edge_商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2affddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
-[![](https://img.shields.io/badge/dynamic/json?label=Edge_商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2affddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+[![](https://img.shields.io/badge/dynamic/json?label=Edge+商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+[![](https://img.shields.io/badge/dynamic/json?label=Edge+商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
 🚀 自动跳过网站中转/重定向页面，直达目标链接。
 
