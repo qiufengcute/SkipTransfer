@@ -6,7 +6,7 @@
 [![](https://img.shields.io/badge/dynamic/json?label=Edge+商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 [![](https://img.shields.io/badge/dynamic/json?label=Edge+商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
-[![](./Get_it_from_edge)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+[![](./Get_it_from_edge.png)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
 🚀 自动跳过网站中转/重定向页面，直达目标链接。
 
