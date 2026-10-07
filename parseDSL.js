@@ -103,7 +103,9 @@ export async function parse(text, url, tabId) {
         console.log('[DSLParser] Element command run done, result: ', data);
     } else if (selectorCommand === 'ARG') {
         if (selectorDataCommand) throw new DSLParseError('Arg command cannot have data command.');
-        data = new URL(url).searchParams.get(selectorText);
+        const urlParams = new URL(url).searchParams;
+        if (selectorText === '') data = [...urlParams.keys()][0];
+        else data = urlParams.get(selectorText);
         console.log('[DSLParser] Arg command run done, result: ', data);
     } else throw new DSLParseError('Selector command unknown');
 
