@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Skip Transfer",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "跳过各种网页的中转页",
     "permissions": [
         "storage",
