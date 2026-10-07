@@ -297,7 +297,7 @@
         "name": "MC百科",
         "homePage": "https://mcmod.cn/",
         "url": "https://link\\.mcmod\\.cn/target/(.*)",
-        "param": "[Arg() => BASE64]"
+        "param": "[UrlArg() => BASE64]"
     },
     {
         "name": "Anime字幕论坛",
