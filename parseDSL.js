@@ -83,9 +83,9 @@ export async function parse(text, url, tabId) {
         return undefined;
     }
 
-    // [Element(Query 选择器)] [Arg(名称)]         // Selector command / <Name> command
-    // .属性名 .[HTML] .[JumpInit|属性名/[HTML]]   // Data command
-    // => BASE64                                 // Last command
+    // [Element(Query 选择器)] [Arg(名称)] [UrlArg()]  // Selector command / <Name> command
+    // .属性名 .[HTML] .[JumpInit|属性名/[HTML]]       // Data command
+    // => BASE64                                     // Last command
     const match = text.trim().match(/^\[\s*(.*?)\s*\(\s*(.*?)\s*\)\s*\.\s*?(.*?)(?:\s*=>\s*(.*?))?\s*\]$/);
     if (!match) throw new DSLParseError('Syntax analysis faild.');
     const selectorCommand = match[1].trim().toUpperCase();
@@ -107,6 +107,11 @@ export async function parse(text, url, tabId) {
         if (selectorText === '') data = [...urlParams.keys()][0];
         else data = urlParams.get(selectorText);
         console.log('[DSLParser] Arg command run done, result: ', data);
+    } else if (selectorCommand === 'URLARG') {
+        if (selectorDataCommand) throw new DSLParseError('UrlArg command cannot have data command.');
+        const paths = new URL(url).pathname.split('/');
+        data = (paths[paths.length - 1] === '') ? paths[paths.length - 2] : paths[paths.length - 1];
+        console.log('[DSLParser] UrlArg command run done, result: ', data);
     } else throw new DSLParseError('Selector command unknown');
 
     if (!data || isJumpInit) return null;
