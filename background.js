@@ -12,7 +12,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
         const transfers = await getTransfers();
         const url = new URL(tab.url);
-        const fullUrl = url.hostname + url.pathname;
+        let pathname = url.pathname;
+        if (pathname.endsWith('/')) {
+            pathname = pathname.slice(0, -1);
+        }
+        const fullUrl = url.hostname + pathname;
         let resultId = -1;
 
         for (const [i, t] of Object.entries(transfers)) {
