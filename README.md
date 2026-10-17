@@ -3,8 +3,8 @@
 ![支持浏览器](https://img.shields.io/badge/Edge-支持-0078D7?logo=microsoftedge&logoColor=white)
 ![支持浏览器](https://img.shields.io/badge/Chrome-支持-4285F4?logo=googlechrome&logoColor=white)
 ![开源协议](https://img.shields.io/badge/协议-MIT-green)
-[![](https://img.shields.io/badge/dynamic/json?label=Edge+商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
-[![](https://img.shields.io/badge/dynamic/json?label=Edge+商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+[![Edge 商店版本](https://img.shields.io/badge/dynamic/json?label=Edge+商店&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
+[![Edge 商店评分](https://img.shields.io/badge/dynamic/json?label=Edge+商店评分&suffix=/5&query=%24.averageRating&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Faffddlaihdgmikjjkimicgpfkpnndfag)](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
 <a href="https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag"><img src="./Get_it_from_edge.png" width="320"></a>
 
@@ -23,7 +23,7 @@
 
 ### Edge 扩展商店
 
-**正在审核中**
+[此链接](https://microsoftedge.microsoft.com/addons/detail/skip-transfer/affddlaihdgmikjjkimicgpfkpnndfag)
 
 ### 其他浏览器 / 开发者模式
 
